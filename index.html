@@ -564,10 +564,15 @@ footer{padding-block:30px 110px;color:var(--dim);font:500 12px var(--mono);text-
 })();
 </script>
 <script>
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-
-const firebaseConfig = {
+/* =========================================================
+   PASTE YOUR FIREBASE CONFIG HERE
+   Firebase console → Project settings → Your apps → Web app.
+   Paste ONLY the object between the braces. Do not paste the
+   "import ..." lines or "initializeApp(...)" from Firebase.
+   While apiKey still starts with "YOUR", the site runs in
+   local mode (saved in this browser only).
+   ========================================================= */
+window.firebaseConfig = {
   apiKey: "AIzaSyCGI1Uzk-ibMaS0wu56GVhmj40YhFWnMeo",
   authDomain: "trip-planner-2c1ca.firebaseapp.com",
   databaseURL: "https://trip-planner-2c1ca-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -577,10 +582,6 @@ const firebaseConfig = {
   appId: "1:909860030933:web:60135074cceca1b7b7155c",
   measurementId: "G-J9555C6DCQ"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 </script>
 <script type="module">
 const firebaseConfig = window.firebaseConfig || {};
