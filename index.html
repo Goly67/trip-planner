@@ -545,19 +545,23 @@ footer{padding-block:30px 110px;color:var(--dim);font:500 12px var(--mono);text-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script type="module">
-/* =========================================================
-   1) PASTE YOUR FIREBASE CONFIG HERE
-   Firebase console → Project settings → Your apps → Web app.
-   While apiKey still starts with "YOUR", the site runs in
-   local mode (saved in this browser only).
-   ========================================================= */
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "YOUR_PROJECT",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCGI1Uzk-ibMaS0wu56GVhmj40YhFWnMeo",
+  authDomain: "trip-planner-2c1ca.firebaseapp.com",
+  databaseURL: "https://trip-planner-2c1ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "trip-planner-2c1ca",
+  storageBucket: "trip-planner-2c1ca.firebasestorage.app",
+  messagingSenderId: "909860030933",
+  appId: "1:909860030933:web:60135074cceca1b7b7155c",
+  measurementId: "G-J9555C6DCQ"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const ROOT = 'baguioTrip';
 const FB_VERSION = '10.12.2';
 
