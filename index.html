@@ -544,7 +544,26 @@ footer{padding-block:30px 110px;color:var(--dim);font:500 12px var(--mono);text-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script type="module">
+<script>
+/* Safety net: hides the loading screen even if the main script crashes, and says why. */
+(function () {
+  var errs = [];
+  addEventListener('error', function (e) { if (e.message) errs.push(e.message); });
+  addEventListener('unhandledrejection', function (e) { errs.push(String((e.reason && e.reason.message) || e.reason)); });
+  setTimeout(function () {
+    var l = document.getElementById('loader');
+    if (l) { l.classList.add('gone'); setTimeout(function () { l.remove(); }, 1100); }
+    var t = document.getElementById('title'); if (t) t.classList.add('go');
+    if (!window.__booted) {
+      var b = document.createElement('div');
+      b.style.cssText = 'position:fixed;z-index:2147483001;left:16px;right:16px;bottom:16px;padding:14px 16px;border-radius:14px;background:#ff4f6d;color:#fff;font:600 14px/1.45 system-ui,sans-serif';
+      b.textContent = 'The planner script did not start. ' + (errs[0] ? 'Error: ' + errs[0] + '. ' : '') + 'If you just pasted your Firebase config, paste only the { ... } object, without the import lines.';
+      document.body.appendChild(b);
+    }
+  }, 4500);
+})();
+</script>
+<script>
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 
@@ -562,6 +581,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+</script>
+<script type="module">
+const firebaseConfig = window.firebaseConfig || {};
+const configBroken = !window.firebaseConfig;
 const ROOT = 'baguioTrip';
 const FB_VERSION = '10.12.2';
 
@@ -1317,11 +1340,13 @@ addEventListener('scroll', () => $('#topbar').classList.toggle('scrolled', scrol
 /* ---------------- boot ---------------- */
 buildMountains(); splitTitle(); icons(); fogCanvas(); parallax(); journey(); reveals();
 const hideLoader = () => {
-  const l = $('#loader'); l.classList.add('gone');
+  const l = $('#loader'); if (!l) return; l.classList.add('gone');
   setTimeout(() => { $('#title').classList.add('go'); }, RM ? 0 : 250);
   setTimeout(() => l.remove(), 1100);
 };
 setTimeout(hideLoader, RM ? 0 : 1500);
+window.__booted = true;
+if (configBroken) setTimeout(() => toast('Your Firebase config has a typo, so the site is running in local mode. Paste only the { ... } object.', { error: true, ms: 9000 }), 1800);
 
 const hasConfig = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('YOUR');
 if (hasConfig) {
