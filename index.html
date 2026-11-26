@@ -594,14 +594,11 @@ footer{padding-block:30px 110px;color:var(--dim);font:500 12px var(--mono);text-
    local mode (saved in this browser only).
    ========================================================= */
 window.firebaseConfig = {
-  apiKey: "AIzaSyCGI1Uzk-ibMaS0wu56GVhmj40YhFWnMeo",
-  authDomain: "trip-planner-2c1ca.firebaseapp.com",
-  databaseURL: "https://trip-planner-2c1ca-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "trip-planner-2c1ca",
-  storageBucket: "trip-planner-2c1ca.firebasestorage.app",
-  messagingSenderId: "909860030933",
-  appId: "1:909860030933:web:60135074cceca1b7b7155c",
-  measurementId: "G-J9555C6DCQ"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
 };
 </script>
 <script type="module">
@@ -674,7 +671,7 @@ function seed() {
         S('05:00', '06:00', 'Check-in, then breakfast', 'food', { place: 'BXU Airport', lat: 8.9515, lng: 125.4788 }),
         S('07:00', '08:55', 'Flight to Manila', 'flight', { place: 'BXU → MNL', lat: 14.5086, lng: 121.0198 }),
         S('09:00', '12:00', 'SM Mall of Asia + lunch', 'food', { place: 'Pasay', lat: 14.5352, lng: 120.9822 }),
-        S('14:00', '15:00', 'Victory Liner to Baguio City', 'bus', { place: 'Pasay Terminal', lat: 14.5378, lng: 121.0005 }),
+        S('16:15', '', 'Victory Liner to Baguio · First Class', 'bus', { place: 'Pasay Terminal', note: 'Seats 4 · 7 · 11', lat: 14.5378, lng: 121.0005 }),
         S('21:00', '00:00', 'Arrive Baguio · Baguio Suites', 'stay', { place: 'Baguio City', lat: 16.4115, lng: 120.5960 }),
       ]) },
       d3: { date: '2026-11-27', title: 'Baguio City loop', note: 'Hire van for 6', items: items([
@@ -703,10 +700,10 @@ function seed() {
         S('', '', 'Baguio Night Market', 'shop', { label: 'Evening', place: 'Harrison Rd', lat: 16.4128, lng: 120.5950 }),
       ]) },
       d5: { date: '2026-11-29', title: 'Pasalubong and goodbye', note: '', items: items([
+        S('06:15', '', 'Victory Liner to Pasay · First Class', 'bus', { place: 'Baguio terminal', note: 'Seats 4 · 5 · 13 · 14' }),
         S('', '', 'Relaxed breakfast', 'food', { label: 'Morning' }),
         S('', '', 'Last-minute shopping', 'shop', { label: 'Morning' }),
         S('', '', 'Pasalubong run', 'shop', { label: 'Before 2 PM' }),
-        S('14:00', '', 'Depart to Manila', 'bus'),
       ]) },
     },
     lists: {
@@ -779,7 +776,32 @@ $('#sync').addEventListener('click', () => {
 });
 
 /* ---------------- render ---------------- */
-function onData(d) { DATA = d || {}; renderAll(); if (firstData) { firstData = false; countUp(); } }
+function onData(d) { DATA = d || {}; renderAll(); if (firstData) { firstData = false; countUp(); } setTimeout(() => fixBusTimes(DATA)); }
+
+/* one-time fix: match both Victory Liner stops to the real tickets (runs once per database) */
+let busFixSent = false;
+function fixBusTimes(d) {
+  if (busFixSent || !d?.days || d.meta?.busTimesFixed) return;
+  if (!store) return void setTimeout(() => fixBusTimes(DATA), 400);
+  busFixSent = true;
+  const upd = { 'meta/busTimesFixed': true };
+  for (const [dayId, day] of Object.entries(d.days)) {
+    const items = Object.entries(day.items || {}), first = Math.min(0, ...items.map(([, i]) => i.order ?? 0));
+    for (const [id, it] of items) {
+      const k = `days/${dayId}/items/${id}/`, t = it.title || '';
+      if (day.date === '2026-11-26' && /victory liner/i.test(t)) {
+        Object.assign(upd, { [k + 'time']: '16:15', [k + 'end']: '', [k + 'label']: '', [k + 'title']: 'Victory Liner to Baguio · First Class' });
+        if (!it.note) upd[k + 'note'] = 'Seats 4 · 7 · 11';
+      }
+      if (day.date === '2026-11-29' && /victory liner|depart/i.test(t)) {
+        Object.assign(upd, { [k + 'time']: '06:15', [k + 'end']: '', [k + 'label']: '', [k + 'title']: 'Victory Liner to Pasay · First Class', [k + 'order']: first - 1 });
+        if (!it.place) upd[k + 'place'] = 'Baguio terminal';
+        if (!it.note) upd[k + 'note'] = 'Seats 4 · 5 · 13 · 14';
+      }
+    }
+  }
+  store.update('', upd);
+}
 
 function renderAll() {
   const days = daysSorted();
@@ -1377,5 +1399,6 @@ if (hasConfig) {
   catch (err) { console.error(err); toast('Could not load Firebase. Running in local mode.', { error: true }); store = makeLocal(onData); setStatus('local'); }
 } else { store = makeLocal(onData); setStatus('local'); }
 </script>
+<script src="tickets.js" defer></script>
 </body>
 </html>
